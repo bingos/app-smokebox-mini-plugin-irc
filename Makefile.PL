@@ -12,6 +12,7 @@ build_requires 'Test::More' => 0.47;
 requires 'POE' => 1.280;
 requires 'App::SmokeBox::Mini' => '0.21_01';
 requires 'POE::Component::IRC' => 6.16;
+makemaker_args(dist => { PREOP => "$^X ./tools/git-log.pl > ./Changes" });
 githubmeta;
 auto_provides;
 WriteAll();
