@@ -1,0 +1,164 @@
+package App::SmokeBox::Mini::Plugin::IRC;
+
+use strict;
+use warnings;
+use POE qw(Component::IRC Component::IRC::Plugin::Connector);
+
+our $VERSION = '0.02';
+
+sub init {
+  my $package = shift;
+  my $config  = shift;
+  return unless $config and ref $config eq 'Config::Tiny';
+  return unless $config->{IRC};
+  return unless $config->{IRC}->{server};
+  my $heap = $config->{IRC};
+  POE::Session->create(
+     package_states => [
+        __PACKAGE__, [qw(_start _start_up irc_registered irc_001 sbox_smoke sbox_stop)],
+     ],
+     heap => $heap,
+  );
+}
+
+sub _start {
+  my ($kernel,$heap) = @_[KERNEL,HEAP];
+  $kernel->refcount_increment( $_[SESSION]->ID(), __PACKAGE__ );
+  $kernel->yield( '_start_up' );
+  return;
+}
+
+sub _start_up {
+  my ($kernel,$heap) = @_[KERNEL,HEAP];
+  $heap->{nick} = $^O . $$ unless $heap->{nick};
+  my $irc = POE::Component::IRC->spawn(
+    ( map { ( $_, $heap->{$_} ) } grep { exists $heap->{$_} } qw(server nick ircname username port) ),
+  );
+  $heap->{_irc} = $irc;
+  return;
+}
+
+sub irc_registered {
+  my ($kernel,$heap,$irc) = @_[KERNEL,HEAP,ARG0];
+  $irc->plugin_add( 'Connector', POE::Component::IRC::Plugin::Connector->new() );
+  $irc->yield( 'connect', { } );
+  return;
+}
+
+sub irc_001 {
+  my ($kernel,$heap,$sender) = @_[KERNEL,HEAP,SENDER];
+  $kernel->post( $sender, 'join', $_ ) for _get_channels( $heap->{channels} );
+  return;
+}
+
+sub _get_channels {
+  my $channels = shift;
+  my @channels;
+  unless ( $channels ) { 
+    push @channels, '#smokebox';
+  }
+  else {
+    push @channels, split(/\,/, $channels);
+  }
+  return @channels;
+}
+
+sub sbox_smoke {
+  my ($kernel,$heap,$data) = @_[KERNEL,HEAP,ARG0];
+  my $dist = $data->{job}->module();
+  my ($result) = $data->{result}->results;
+  my $message = "Distribution: '$dist' finished with status '$result->{status}'";
+  $heap->{_irc}->yield( 'privmsg', $_, $message ) for _get_channels( $heap->{channels} );
+  return;
+}
+
+sub sbox_stop {
+  my ($kernel,$heap,@stats) = @_[KERNEL,HEAP,ARG0..$#_];
+  $kernel->refcount_decrement( $_[SESSION]->ID(), __PACKAGE__ );
+  $heap->{_irc}->yield( 'privmsg', $_, 'Smoker finished: ' . join(',', @stats) ) for
+    _get_channels( $heap->{channels} );
+  $heap->{_irc}->delay( [ 'shutdown' ], 5 );
+  return;
+}
+
+qq[Smokey IRC];
+
+__END__
+
+=head1 NAME
+
+App::SmokeBox::Mini::Plugin::IRC - IRC plugin for minismokebox
+
+=head1 SYNOPSIS
+
+  # example minismokebox configuration file
+
+  [IRC]
+  
+  server = my.irc.server
+  nick = mysmoker
+  
+
+=head1 DESCRIPTION
+
+App::SmokeBox::Mini::Plugin::IRC is an IRC plugin for L<App::SmokeBox::Mini> and 
+L<minismokebox> that announces on IRC channels when smoke jobs finish and when 
+L<minismokebox> itself finishes.
+
+Configuration is handled by a section in the L<minismokebox> configuration file.
+
+When L<minismokebox> starts a bot will join configured channels and start announcing
+completed smoke jobs. When the smoke run finishes the bot will announce statistics 
+relating to the smoke run and then terminate.
+
+=head1 CONFIGURATION
+
+This plugin uses an C<[IRC]> section within the L<minismokebox> configuration file.
+
+The only mandatory required parameter is C<server>.
+
+=over
+
+=item C<server>
+
+Specify the name or IP address of an ircd to connect to. Mandatory.
+
+=item C<nick>
+
+The nickname to use. Defaults to $^O plus $$.
+
+=item C<port>
+
+The ircd port to connect to. Defaults to C<6667>.
+
+=item C<ircname>
+
+Some cute comment or something.
+
+=item C<username>
+
+Your client's username.
+
+=item C<channels>
+
+A comma-separated list of IRC channels to join, default is C<#smokebox>
+
+=back
+
+=head1 AUTHOR
+
+Chris C<BinGOs> Williams <chris@bingosnet.co.uk>
+
+=head1 LICENSE
+
+Copyright E<copy> Chris Williams
+
+This module may be used, modified, and distributed under the same terms as Perl itself. Please see the license that came with your Perl distribution for details.
+
+=head1 SEE ALSO
+
+L<minismokebox>
+
+L<App::SmokeBox::Mini::Plugin>
+
+=cut
