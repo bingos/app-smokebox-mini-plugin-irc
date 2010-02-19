@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use POE qw(Component::IRC Component::IRC::Plugin::Connector);
 
-our $VERSION = '0.02';
+our $VERSION = '0.04';
 
 sub init {
   my $package = shift;
@@ -32,7 +32,7 @@ sub _start_up {
   my ($kernel,$heap) = @_[KERNEL,HEAP];
   $heap->{nick} = $^O . $$ unless $heap->{nick};
   my $irc = POE::Component::IRC->spawn(
-    ( map { ( $_, $heap->{$_} ) } grep { exists $heap->{$_} } qw(server nick ircname username port) ),
+    ( map { ( $_, $heap->{$_} ) } grep { exists $heap->{$_} } qw(server nick ircname username port password) ),
   );
   $heap->{_irc} = $irc;
   return;
@@ -138,6 +138,10 @@ Some cute comment or something.
 =item C<username>
 
 Your client's username.
+
+=item C<password>
+
+The password that is required if your ircd is restricted.
 
 =item C<channels>
 
