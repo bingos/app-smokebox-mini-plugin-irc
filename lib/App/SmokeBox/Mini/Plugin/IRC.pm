@@ -15,7 +15,7 @@ sub init {
   my $heap = $config->{IRC};
   POE::Session->create(
      package_states => [
-        __PACKAGE__, [qw(_start _start_up irc_registered irc_001 sbox_smoke sbox_stop)],
+        __PACKAGE__, [qw(_start _start_up irc_registered irc_001 sbox_smoke sbox_stop sbox_perl_info)],
      ],
      heap => $heap,
   );
@@ -61,6 +61,13 @@ sub _get_channels {
     push @channels, split(/\,/, $channels);
   }
   return @channels;
+}
+
+sub sbox_perl_info {
+  my ($kernel,$heap,$vers,$arch) = @_[KERNEL,HEAP,ARG0,ARG1];
+  my $message = "Smoking v$vers built for $arch";
+  $heap->{_irc}->yield( 'privmsg', $_, $message ) for _get_channels( $heap->{channels} );
+  return;
 }
 
 sub sbox_smoke {

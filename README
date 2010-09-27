@@ -42,6 +42,9 @@ CONFIGURATION
     "username"
         Your client's username.
 
+    "password"
+        The password that is required if your ircd is restricted.
+
     "channels"
         A comma-separated list of IRC channels to join, default is
         "#smokebox"

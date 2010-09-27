@@ -1,3 +1,13 @@
+==============================
+2010-02-19 07:59:42 +0000 0.04
+==============================
+
+  commit aa53eaa73ce8b6f933f7fa41e72e1a67a7ac65e8
+  Author: Chris Williams <chris@bingosnet.co.uk>
+  Date:   Fri Feb 19 07:59:42 2010 +0000
+  
+    Added 'password' configuration variable. 
+
 ==============
 End of Excerpt
 ==============

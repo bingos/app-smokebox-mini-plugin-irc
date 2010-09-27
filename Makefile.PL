@@ -10,7 +10,7 @@ auto_license;
 perl_version '5.006';
 build_requires 'Test::More' => 0.47;
 requires 'POE' => 1.280;
-requires 'App::SmokeBox::Mini' => '0.21_01';
+requires 'App::SmokeBox::Mini' => '0.32';
 requires 'POE::Component::IRC' => 6.16;
 makemaker_args(dist => { PREOP => "$^X ./tools/git-log.pl > ./Changes" });
 githubmeta;
