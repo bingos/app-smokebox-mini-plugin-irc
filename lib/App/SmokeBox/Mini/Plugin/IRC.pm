@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use POE qw(Component::IRC Component::IRC::Plugin::Connector);
 
-our $VERSION = '0.04';
+our $VERSION = '0.06';
 
 sub init {
   my $package = shift;
