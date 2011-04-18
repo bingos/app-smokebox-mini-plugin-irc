@@ -5,7 +5,7 @@ SYNOPSIS
       # example minismokebox configuration file
 
       [IRC]
-  
+
       server = my.irc.server
       nick = mysmoker
 

@@ -2,9 +2,10 @@ package App::SmokeBox::Mini::Plugin::IRC;
 
 use strict;
 use warnings;
-use POE qw(Component::IRC Component::IRC::Plugin::Connector);
+use POE qw[Component::IRC Component::IRC::Plugin::Connector];
+use POE::Component::IRC::Common qw[u_irc];
 
-our $VERSION = '0.06';
+our $VERSION = '0.08';
 
 sub init {
   my $package = shift;
@@ -15,7 +16,7 @@ sub init {
   my $heap = $config->{IRC};
   POE::Session->create(
      package_states => [
-        __PACKAGE__, [qw(_start _start_up irc_registered irc_001 sbox_smoke sbox_stop sbox_perl_info)],
+        __PACKAGE__, [qw(_start _start_up irc_registered irc_001 irc_join sbox_smoke sbox_stop sbox_perl_info)],
      ],
      heap => $heap,
   );
@@ -51,10 +52,21 @@ sub irc_001 {
   return;
 }
 
+sub irc_join {
+  my ($kernel,$heap,$sender) = @_[KERNEL,HEAP,SENDER];
+  my $map = $heap->{_irc}->isupport('CASEMAPPING');
+  my $unick = u_irc( ( split /!/, $_[ARG0] )[0], $map );
+  my $chan = $_[ARG1];
+  return unless $unick eq u_irc( $heap->{_irc}->nick_name(), $map );
+  return unless $heap->{_msg};
+  $kernel->post( $sender, 'privmsg', $chan, $heap->{_msg} );
+  return;
+}
+
 sub _get_channels {
   my $channels = shift;
   my @channels;
-  unless ( $channels ) { 
+  unless ( $channels ) {
     push @channels, '#smokebox';
   }
   else {
@@ -66,6 +78,7 @@ sub _get_channels {
 sub sbox_perl_info {
   my ($kernel,$heap,$vers,$arch) = @_[KERNEL,HEAP,ARG0,ARG1];
   my $message = "Smoking v$vers built for $arch";
+  $heap->{_msg} = $message;
   $heap->{_irc}->yield( 'privmsg', $_, $message ) for _get_channels( $heap->{channels} );
   return;
 }
@@ -101,21 +114,21 @@ App::SmokeBox::Mini::Plugin::IRC - IRC plugin for minismokebox
   # example minismokebox configuration file
 
   [IRC]
-  
+
   server = my.irc.server
   nick = mysmoker
-  
+
 
 =head1 DESCRIPTION
 
-App::SmokeBox::Mini::Plugin::IRC is an IRC plugin for L<App::SmokeBox::Mini> and 
-L<minismokebox> that announces on IRC channels when smoke jobs finish and when 
+App::SmokeBox::Mini::Plugin::IRC is an IRC plugin for L<App::SmokeBox::Mini> and
+L<minismokebox> that announces on IRC channels when smoke jobs finish and when
 L<minismokebox> itself finishes.
 
 Configuration is handled by a section in the L<minismokebox> configuration file.
 
 When L<minismokebox> starts a bot will join configured channels and start announcing
-completed smoke jobs. When the smoke run finishes the bot will announce statistics 
+completed smoke jobs. When the smoke run finishes the bot will announce statistics
 relating to the smoke run and then terminate.
 
 =head1 CONFIGURATION
