@@ -2,7 +2,7 @@ package App::SmokeBox::Mini::Plugin::IRC;
 
 use strict;
 use warnings;
-use POE qw[Component::IRC Component::IRC::Plugin::Connector];
+use POE qw[Component::IRC Component::IRC::Plugin::Connector Component::IRC::Plugin::CTCP];
 use POE::Component::IRC::Common qw[u_irc];
 
 our $VERSION = '0.08';
@@ -80,6 +80,12 @@ sub sbox_perl_info {
   my $message = "Smoking v$vers built for $arch";
   $heap->{_msg} = $message;
   $heap->{_irc}->yield( 'privmsg', $_, $message ) for _get_channels( $heap->{channels} );
+  $heap->{_irc}->plugin_add( 'CTCP',
+    POE::Component::IRC::Plugin::CTCP->new(
+      version  => $message,
+      userinfo => $message,
+    )
+  );
   return;
 }
 
