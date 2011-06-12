@@ -1,11 +1,11 @@
 package App::SmokeBox::Mini::Plugin::IRC;
 
+#ABSTRACT: IRC plugin for minismokebox
+
 use strict;
 use warnings;
 use POE qw[Component::IRC Component::IRC::Plugin::Connector Component::IRC::Plugin::CTCP];
 use POE::Component::IRC::Common qw[u_irc];
-
-our $VERSION = '0.08';
 
 sub init {
   my $package = shift;
@@ -109,11 +109,13 @@ sub sbox_stop {
 
 qq[Smokey IRC];
 
-__END__
+=begin Pod::Coverage
 
-=head1 NAME
+  ^irc|sbox|init
 
-App::SmokeBox::Mini::Plugin::IRC - IRC plugin for minismokebox
+=end Pod::Coverage
+
+=pod
 
 =head1 SYNOPSIS
 
@@ -174,16 +176,6 @@ The password that is required if your ircd is restricted.
 A comma-separated list of IRC channels to join, default is C<#smokebox>
 
 =back
-
-=head1 AUTHOR
-
-Chris C<BinGOs> Williams <chris@bingosnet.co.uk>
-
-=head1 LICENSE
-
-Copyright E<copy> Chris Williams
-
-This module may be used, modified, and distributed under the same terms as Perl itself. Please see the license that came with your Perl distribution for details.
 
 =head1 SEE ALSO
 
