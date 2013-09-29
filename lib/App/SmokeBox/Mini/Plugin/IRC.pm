@@ -76,8 +76,8 @@ sub _get_channels {
 }
 
 sub sbox_perl_info {
-  my ($kernel,$heap,$vers,$arch) = @_[KERNEL,HEAP,ARG0,ARG1];
-  my $message = "Smoking v$vers built for $arch";
+  my ($kernel,$heap,$vers,$arch,$osvers) = @_[KERNEL,HEAP,ARG0,ARG1,ARG2];
+  my $message = "Smoking v$vers built for $arch $osvers";
   $heap->{_msg} = $message;
   $heap->{_irc}->yield( 'privmsg', $_, $message ) for _get_channels( $heap->{channels} );
   $heap->{_irc}->plugin_add( 'CTCP',
